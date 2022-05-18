@@ -7,14 +7,14 @@ import torch
 from ValueLearn.envs.base_env import BaseEnv
 
 class LinearGridworld(BaseEnv):
-    def __init__(self, T, length):
+    def __init__(self, T, state_space, algo):
         super().__init__(T)
-        self.length = length
+        self.state_space = state_space
+        self.algo = algo
 
         self.reset()
 
-        self.rewards = []
-        self.cum_rewards = [0]
+        self.l1_loss = []
 
 
     def step(self, action):
@@ -26,12 +26,11 @@ class LinearGridworld(BaseEnv):
 
         return reward
 
-    def update(self, reward):
+    def update(self, l1_loss):
         """
         Records the rewards
         """
-        self.rewards.append(reward)
-        self.cum_rewards.append(reward + self.cum_rewards[-1])
+        self.l1_loss.append(l1_loss)
 
     def next_actions(self):
         """
@@ -40,19 +39,25 @@ class LinearGridworld(BaseEnv):
         if self.current_state == 0:
             return [1]
 
-        elif self.current_state == self.length - 1:
+        elif self.current_state == self.state_space - 1:
             return [-1]
 
         else:
             return [-1,1]
 
     def reset(self):
-        self.gridworld = torch.zeros(self.length)
-        self.rewarding_state = torch.randint(0, self.length, (1,)).item()
+        self.gridworld = torch.zeros(self.state_space)
+        self.rewarding_state = torch.randint(0, self.state_space, (1,)).item()
         self.gridworld[self.rewarding_state] = 1
 
-        self.starting_state = torch.randint(0, self.length, (1,)).item()
+        self.starting_state = torch.randint(0, self.state_space, (1,)).item()
         self.current_state = self.starting_state
+
+    def get_l1_loss(self, value_function):
+        return torch.sum(self.gridworld - value_function)
+
+    def get_context(self):
+        return self.current_state
         
 
 
