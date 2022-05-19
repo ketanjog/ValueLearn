@@ -12,14 +12,16 @@ class ModelBased(BaseAlgo):
         super().__init__(run_id)
         self.state_space = state_space
         self.set_policy()
+
+        self.rflag = False
+        self.vflag = False
         
         self.T = torch.zeros((self.state_space, self.state_space))
         self.reward = torch.zeros(self.state_space)
         self.V = torch.zeros(self.state_space)
+
+        self.reset()
         
-        self.current_state = None
-        self.previous_state = None
-        self.previous_reward = None
 
     def choose_action(self, context, actions):
         """
@@ -47,6 +49,7 @@ class ModelBased(BaseAlgo):
 
         #Update V, only V(curr) and V(prev) changes.
         if self.previous_state is not None:
+            self.vflag = True
             
             # If this is the first time the state is visited, denom will be 0 -> skip update
             if torch.sum(self.T[self.previous_state]) != 0:
@@ -63,6 +66,7 @@ class ModelBased(BaseAlgo):
         
         # Update R
         if self.previous_reward is not None:
+            self.rflag = True
             self.reward[self.current_state] = self.previous_reward
 
         # Save new reward. Will update R(s) for resultant state in 
@@ -71,6 +75,11 @@ class ModelBased(BaseAlgo):
 
     def get_value_function(self):
         return self.V
+
+    def reset(self):
+        self.current_state = None
+        self.previous_state = None
+        self.previous_reward = None
         
         
             

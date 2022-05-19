@@ -12,5 +12,10 @@ env = LinearGridworld(T, state_space, algo)
 
 env.train()
 
+#print(env.gridworld)
 print(algo.V)
-print(env.gridworld)
+print(algo.reward)
+print("-----")
+print(algo.tflag)
+print(algo.vflag)
+print(algo.rflag)
