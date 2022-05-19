@@ -14,8 +14,6 @@ class LinearGridworld(BaseEnv):
 
         self.reset()
 
-        self.l_inf_loss = []
-
 
     def step(self, action):
         assert action in [-1, 1]
@@ -26,11 +24,11 @@ class LinearGridworld(BaseEnv):
 
         return reward
 
-    def update(self, l1_loss):
+    def update(self):
         """
-        Records the rewards
+        Nothing yet
         """
-        self.l_inf_loss.append(l1_loss)
+        pass
 
     def next_actions(self):
         """
@@ -57,9 +55,6 @@ class LinearGridworld(BaseEnv):
         self.starting_state = torch.randint(0, self.state_space, (1,)).item()
         self.current_state = self.starting_state
 
-
-    def get_l_inf_loss(self, value_function):
-        return torch.sum(self.gridworld/self.gridworld.max() - value_function/value_function.max())
 
     def get_context(self):
         return self.current_state

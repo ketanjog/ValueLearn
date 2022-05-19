@@ -48,13 +48,12 @@ class BaseEnv:
             action = self.algo.choose_action(context, actions)
             r = self.step(action)
             self.algo.update(r)
-            l_inf_loss = self.get_l_inf_loss(self.algo.get_value_function())
-            self.update(l_inf_loss)
+            self.update()
 
             if _ % self.episode_length == 0:
                 self.start_new_episode()
                 self.algo.reset()
             
             # print the reward
-            # pbar.set_description(f"L1 loss: {self.l_inf_loss[-1]:.2f}")
+            # pbar.set_description(f"L inf loss: {self.l_inf_loss[-1]:.2f}")
             pbar.update(1)
