@@ -8,70 +8,59 @@ from ValueLearn.algos.base_algo import BaseAlgo
 import torch
 
 class ModelBased(BaseAlgo):
-    def __init__(self, state_space, run_id=None):
+    def __init__(self, state_space, gamma, run_id=None):
         super().__init__(run_id)
         self.state_space = state_space
         self.set_policy()
-
-        self.rflag = False
-        self.vflag = False
         
         self.T = torch.zeros((self.state_space, self.state_space))
         self.reward = torch.zeros(self.state_space)
         self.V = torch.zeros(self.state_space)
+        self.gamma = gamma
 
         self.reset()
         
 
-    def choose_action(self, context, actions):
+    def choose_action(self):
         """
         returns action as chosen by preset policy
         """
-        self.previous_state = self.current_state
-        self.current_state = context
-        
-        if len(actions) == 1:
-            return actions[0]
-        else:
-            return self.policy[context].item()
+    
+        return self.policy[self.current_state].item()
         
     
     
     def set_policy(self):
+        """
+        Create a random deterministic policy
+        """
         self.policy = torch.randint(0, 2, (self.state_space,))
         self.policy[self.policy == 0] = -1
 
-    def update(self, reward):
+    def update(self, context, reward):
         """
+        Iteratively updates V. 
         Updates R(s) (expected (deterministic) reward in state s)
         Updates T(s,s') (Nonnormalised Probability of transition)
         """
-
-        #Update V, only V(curr) and V(prev) changes.
-        if self.previous_state is not None:
-            self.vflag = True
-            
-            # If this is the first time the state is visited, denom will be 0 -> skip update
-            if torch.sum(self.T[self.previous_state]) != 0:
-                self.V[self.previous_state] += (self.V[self.current_state] - torch.dot(self.V, self.T[self.previous_state])) / ((torch.sum(self.T[self.previous_state]))*(torch.sum(self.T[self.previous_state] + 1)))
-            
-            self.V[self.current_state] += self.previous_reward - self.reward[self.current_state]
-
-
+        self.previous_state = self.current_state
+        self.current_state = context
             
 
         # Update T
         if self.previous_state is not None:
             self.T[self.previous_state][self.current_state] += 1
+
+            # Normalise probability matrix T
+            self.T = torch.nn.functional.normalize(self.T, p=1)
+
+        # v = R + gamma * Tv
+        self.V = self.reward + self.gamma * torch.matmul(self.T, self.V)
         
         # Update R
-        if self.previous_reward is not None:
-            self.rflag = True
-            self.reward[self.current_state] = self.previous_reward
-
-        # Save new reward. Will update R(s) for resultant state in 
-        # the next iteration
-        self.previous_reward = reward
+        self.reward[self.current_state] = reward
+    
+        
 
     def get_value_function(self):
         return self.V

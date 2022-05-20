@@ -11,7 +11,7 @@ class BaseAlgo:
         self.run_id = run_id
         self.name = "BaseAlgo"
 
-    def choose_action(self, context, actions):
+    def choose_action(self):
         """
         Returns the action to be taken
         """

@@ -43,17 +43,19 @@ class BaseEnv:
         """
         pbar = tqdm(total=self.T)
         for _ in range(self.T):
-            actions = self.next_actions()
-            context = self.get_context()
-            action = self.algo.choose_action(context, actions)
-            r = self.step(action)
-            self.algo.update(r)
-            self.update()
 
+            # Start episode
             if _ % self.episode_length == 0:
                 self.start_new_episode()
                 self.algo.reset()
+
+            r = self.get_reward()
+            context = self.get_context()
+            self.algo.update(context, r)
+            self.update()
+            action = self.algo.choose_action() # actions param deleted heres
+            self.step(action)
             
-            # print the reward
+            
             # pbar.set_description(f"L inf loss: {self.l_inf_loss[-1]:.2f}")
             pbar.update(1)
